@@ -1,0 +1,12 @@
+# Ignorar entornos virtuales de Python
+backend/.venv/
+
+# Ignorar dependencias de Node.js
+frontend/node_modules/
+
+# Ignorar caché de Python
+backend/__pycache__/
+
+# Archivos temporales
+*.log
+*.env

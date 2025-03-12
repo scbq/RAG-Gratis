@@ -1,0 +1,24 @@
+# Librerías base
+langchain
+langchain-community
+langchain-text-splitters
+langchain-chroma
+langchain-ollama
+
+# Embeddings de HuggingFace
+sentence-transformers
+
+# Base de datos vectorial (Chroma)
+chromadb
+
+# Procesamiento de PDF
+pypdf
+
+# Interfaz gráfica con Gradio
+gradio
+
+# Otras utilidades
+python-dotenv
+
+fastapi
+uvicorn
