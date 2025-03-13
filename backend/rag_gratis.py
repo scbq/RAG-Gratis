@@ -1,16 +1,14 @@
-from fastapi import FastAPI, HTTPException, UploadFile, File
+from fastapi import APIRouter, HTTPException, UploadFile, File
 from pydantic import BaseModel
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.vectorstores import FAISS
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain.chains import create_retrieval_chain
-from langchain.chains.combine_documents import create_stuff_documents_chain
-from langchain_core.prompts import ChatPromptTemplate
 import os
 import pickle
 
-app = FastAPI()
+# 📌 Crear un router para definir los endpoints
+router = APIRouter()
 
 # 📌 Modelo de datos para las preguntas
 class PreguntaRequest(BaseModel):
@@ -49,20 +47,10 @@ def respuesta(pregunta: str):
     if not retrieved_docs:
         return "No se encontraron documentos relevantes para responder la pregunta."
 
-    texto = """Tú eres un asistente para tareas de respuesta a preguntas.
-    Usa los siguientes fragmentos de contexto recuperado para responder la pregunta.
-    Si no sabes la respuesta, di que no sabes. Usa un máximo de tres oraciones y mantén la respuesta concisa."""
-
-    chain = create_stuff_documents_chain(llm, ChatPromptTemplate.from_messages(
-        [("system", texto + "\n\n{context}"), ("human", "{input}")])
-    )
-    rag = create_retrieval_chain(retriever, chain)
-    
-    results = rag.invoke({"input": pregunta})
-    return results['answer']
+    return retrieved_docs[0].page_content  # Devuelve el contenido más relevante
 
 # 📌 Endpoint para hacer preguntas
-@app.post("/preguntar", response_model=RespuestaResponse)
+@router.post("/preguntar", response_model=RespuestaResponse)
 def preguntar(pregunta_request: PreguntaRequest):
     try:
         respuesta_obtenida = respuesta(pregunta_request.pregunta)
@@ -71,7 +59,7 @@ def preguntar(pregunta_request: PreguntaRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 # 📌 Endpoint para cargar documentos
-@app.post("/cargar_documento")
+@router.post("/cargar_documento")
 async def cargar_documento_api(file: UploadFile = File(...)):
     try:
         # Guardar el archivo en la carpeta 'data'
@@ -90,14 +78,9 @@ async def cargar_documento_api(file: UploadFile = File(...)):
             vectorstore.add_documents(splits)
         else:
             vectorstore = FAISS.from_documents(splits, embedding_model)
-        
+
         guardar_vectorstore()
         return {"mensaje": f"✅ Documento '{file.filename}' cargado e indexado correctamente."}
-    
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
-# 📌 Endpoint de prueba
-@app.get("/")
-def root():
-    return {"mensaje": "🚀 Backend de RAG en FastAPI funcionando correctamente"}
