@@ -40,14 +40,15 @@ const Chat = () => {
       console.error("Error al subir el documento:", error);
       alert("Hubo un error al subir el documento.");
     }
-};
-
+  };
 
   // 💬 Manejo de envío de preguntas
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!question.trim()) return;
+
+    setLoading(true); // Activar indicador de carga
 
     try {
       const response = await fetch("http://127.0.0.1:8000/preguntar", {
@@ -70,9 +71,9 @@ const Chat = () => {
       setAnswer("Hubo un error al obtener la respuesta.");
     }
 
+    setLoading(false); // Desactivar indicador de carga
     setQuestion("");
-};
-
+  };
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -135,7 +136,10 @@ const Chat = () => {
               {/* 📌 Área de respuestas */}
               <div className="flex-1 overflow-y-auto mb-4 p-4 bg-gray-50 rounded-lg">
                 {loading ? (
-                  <div className="text-gray-500">⏳ Procesando...</div>
+                  <div className="text-gray-500 flex items-center">
+                    <span className="animate-spin border-4 border-gray-300 border-t-blue-600 rounded-full w-6 h-6 mr-2"></span>
+                    ⏳ Procesando...
+                  </div>
                 ) : answer ? (
                   <div className="bg-white p-4 rounded-lg shadow-sm">
                     <p className="text-gray-800">{answer}</p>
@@ -156,7 +160,8 @@ const Chat = () => {
                 />
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center"
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center disabled:opacity-50"
+                  disabled={loading} // 🔹 Desactiva el botón mientras carga
                 >
                   <Send className="h-5 w-5" />
                 </button>
