@@ -3,7 +3,7 @@ from pydantic import BaseModel, EmailStr
 class UserCreate(BaseModel):
     email: EmailStr
     password: str
-    is_admin: bool = False
+    role: str
 
 class UserOut(BaseModel):
     id: int

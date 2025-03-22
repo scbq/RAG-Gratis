@@ -37,6 +37,7 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
+
 # 🧪 Obtener usuario actual a partir del token
 def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> User:
     credentials_exception = HTTPException(
@@ -57,30 +58,61 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
         raise credentials_exception
     return user
 
+# ✅ Verificar si el usuario es administrador
+def verificar_admin(user: User = Depends(get_current_user)):
+    if user.role != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="No tienes permisos de administrador."
+        )
+    return user
 
-# 🚀 Registro de administrador
-@router.post("/registro_admin", response_model=UserOut)
-def registrar_admin(user_data: UserCreate, db: Session = Depends(get_db)):
-    user = get_user_by_email(db, user_data.email)
-    if user:
-        raise HTTPException(status_code=400, detail="El usuario ya existe.")
+
+# 📝 Registro de administrador
+@router.post("/registro_admin")
+def registrar_admin(user: UserCreate, db: Session = Depends(get_db)):
+    # 👇 Aquí generas la contraseña hasheada
+    hashed_password = pwd_context.hash(user.password)
 
     new_user = User(
-        email=user_data.email,
-        hashed_password=get_password_hash(user_data.password),
+        email=user.email,
+        password=hashed_password,
         role="admin"
     )
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
-    return new_user
+    return {"mensaje": "✅ Administrador creado exitosamente"}
 
 # 🔐 Login y emisión de token
 @router.post("/login", response_model=Token)
 def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     user = get_user_by_email(db, form_data.username)
-    if not user or not verify_password(form_data.password, user.hashed_password):
+    if not user or not verify_password(form_data.password, user.password):
         raise HTTPException(status_code=401, detail="Credenciales inválidas.")
 
-    access_token = create_access_token(data={"sub": user.email})
+    access_token = create_access_token(data={"sub": user.email, "role": user.role})
+
     return {"access_token": access_token, "token_type": "bearer"}
+
+# Endpoint para registrar un usuario
+@router.post("/registro_usuario")
+def registrar_usuario(user: UserCreate, db: Session = Depends(get_db)):
+    user_existente = get_user_by_email(db, user.email)
+    if user_existente:
+        raise HTTPException(status_code=400, detail="El correo ya está registrado.")
+
+    hashed_password = pwd_context.hash(user.password)
+    nuevo_usuario = User(
+        email=user.email,
+        password=hashed_password,
+        role="user"  # 👈 Rol por defecto
+    )
+    db.add(nuevo_usuario)
+    db.commit()
+    db.refresh(nuevo_usuario)
+    return {"mensaje": "✅ Usuario registrado exitosamente"}
+
+@router.get("/solo_admins")
+def solo_para_admins(user: User = Depends(verificar_admin)):
+    return {"mensaje": f"Hola {user.email}, eres administrador ✅"}

@@ -1,31 +1,29 @@
-import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import Login from './pages/Login';
-import Chat from './pages/Chat';
-import { AuthProvider, useAuth } from './context/AuthContext';
-
-const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { isAuthenticated } = useAuth();
-  if (!isAuthenticated) {
-    return <Navigate to="/login" />;
-  }
-  return <>{children}</>;
-};
-
+// src/App.tsx
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import Login from "./pages/Login";
+import AdminDashboard from "./pages/AdminDashboard";
+import UserDashboard from "./pages/UserDashboard";
+import { AuthProvider } from "./context/AuthContext"; // 👈 Importa el proveedor de contexto
 
 function App() {
   return (
-    <AuthProvider>
+    <AuthProvider> {/* 👈 Envolver toda la app */}
       <BrowserRouter>
         <Routes>
+          {/* Ruta por defecto */}
+          <Route path="/" element={<Navigate to="/login" />} />
+
+          {/* Login */}
           <Route path="/login" element={<Login />} />
+
+          {/* Vistas según rol */}
+          <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/usuario" element={<UserDashboard />} />
+
+          {/* Ruta para no encontradas */}
           <Route
-            path="/"
-            element={
-              <ProtectedRoute>
-                <Chat />
-              </ProtectedRoute>
-            }
+            path="*"
+            element={<div className="p-4 text-red-500">Página no encontrada</div>}
           />
         </Routes>
       </BrowserRouter>
