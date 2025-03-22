@@ -3,7 +3,10 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Login from "./pages/Login";
 import AdminDashboard from "./pages/AdminDashboard";
 import UserDashboard from "./pages/UserDashboard";
-import { AuthProvider } from "./context/AuthContext"; // 👈 Importa el proveedor de contexto
+import { AuthProvider } from "./context/AuthContext";
+import UserManagement from "./pages/UserManagement";
+import DeleteFiles from "./pages/DeleteFiles";
+import Chat from "./pages/Chat";
 
 function App() {
   return (
@@ -19,6 +22,15 @@ function App() {
           {/* Vistas según rol */}
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/usuario" element={<UserDashboard />} />
+
+          {/* Vista para agregar usuarios */}
+          <Route path="/admin/gestion-usuarios" element={<UserManagement />} />
+
+|         {/* Vista para eliminar archivos */}
+          <Route path="/admin/eliminar-archivos" element={<DeleteFiles />} />
+
+          {/* Vista Chat */}
+          <Route path="/admin/chat" element={<Chat />} />
 
           {/* Ruta para no encontradas */}
           <Route
