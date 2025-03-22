@@ -113,3 +113,6 @@ async def cargar_documento_api(file: UploadFile = File(...)):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+
