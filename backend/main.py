@@ -1,26 +1,26 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-import rag_gratis  # Importamos todo el módulo para acceder a sus funciones y rutas
-from routers.auth import router as auth_router  # 👈 importa tu router de auth
+from routers.auth import router as auth_router  # Router para autenticación y usuarios
+from rag_gratis import router as rag_router     # Router para funcionalidades de RAG
 
-app = FastAPI()
+app = FastAPI(title="RAG-Gratis API", version="1.0")
 
-# 👉 Importa los endpoints
-app.include_router(auth_router)  # 👈 agrega esta línea
-
-# Configurar CORS (si aún no está configurado)
+# ✅ CORS (permite conexión desde el frontend en desarrollo)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # en producción deberías restringirlo
+    allow_origins=["*"],  # En producción, reemplaza con tu dominio real
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# 📌 Endpoint de prueba para verificar que el backend está funcionando
+# 🧠 Endpoints de autenticación y usuarios
+app.include_router(auth_router)
+
+# 📄 Endpoints del módulo RAG (carga PDF, hacer preguntas, eliminar archivos, etc.)
+app.include_router(rag_router)
+
+# 🏠 Endpoint raíz
 @app.get("/")
 def home():
     return {"message": "🚀 API de RAG en ejecución"}
-
-# 📌 Incluir los endpoints de `rag_gratis.py`
-app.include_router(rag_gratis.router)  # Esto incluirá todos los endpoints de `rag_gratis.py`

@@ -17,7 +17,6 @@ router = APIRouter()
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/login")
 
-
 # 🔐 Hashear contraseña
 def get_password_hash(password: str):
     return pwd_context.hash(password)
@@ -30,13 +29,16 @@ def verify_password(plain_password, hashed_password):
 def get_user_by_email(db: Session, email: str):
     return db.query(User).filter(User.email == email).first()
 
+# 🔎 Obtener usuario por rut
+def get_user_by_rut(db: Session, rut: str):
+    return db.query(User).filter(User.rut == rut).first()
+
 # ✅ Crear token JWT
 def create_access_token(data: dict, expires_delta: timedelta | None = None):
     to_encode = data.copy()
     expire = datetime.utcnow() + (expires_delta or timedelta(minutes=15))
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-
 
 # 🧪 Obtener usuario actual a partir del token
 def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> User:
@@ -67,21 +69,24 @@ def verificar_admin(user: User = Depends(get_current_user)):
         )
     return user
 
-
 # 📝 Registro de administrador
 @router.post("/registro_admin")
 def registrar_admin(user: UserCreate, db: Session = Depends(get_db)):
-    # 👇 Aquí generas la contraseña hasheada
-    hashed_password = pwd_context.hash(user.password)
+    if get_user_by_rut(db, user.rut) or get_user_by_email(db, user.email):
+        raise HTTPException(status_code=400, detail="El RUT o el correo ya están registrados.")
 
-    new_user = User(
+    hashed_password = get_password_hash(user.password)
+    nuevo_usuario = User(
+        rut=user.rut,
+        nombre=user.nombre,
+        apellido=user.apellido,
         email=user.email,
         password=hashed_password,
-        role="admin"
+        role=user.role
     )
-    db.add(new_user)
+    db.add(nuevo_usuario)
     db.commit()
-    db.refresh(new_user)
+    db.refresh(nuevo_usuario)
     return {"mensaje": "✅ Administrador creado exitosamente"}
 
 # 🔐 Login y emisión de token
@@ -92,27 +97,44 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
         raise HTTPException(status_code=401, detail="Credenciales inválidas.")
 
     access_token = create_access_token(data={"sub": user.email, "role": user.role})
-
     return {"access_token": access_token, "token_type": "bearer"}
 
-# Endpoint para registrar un usuario
+# ✅ Registro de usuario (con cualquier rol)
 @router.post("/registro_usuario")
 def registrar_usuario(user: UserCreate, db: Session = Depends(get_db)):
-    user_existente = get_user_by_email(db, user.email)
-    if user_existente:
-        raise HTTPException(status_code=400, detail="El correo ya está registrado.")
+    if get_user_by_rut(db, user.rut) or get_user_by_email(db, user.email):
+        raise HTTPException(status_code=400, detail="El RUT o el correo ya están registrados.")
 
-    hashed_password = pwd_context.hash(user.password)
+    hashed_password = get_password_hash(user.password)
     nuevo_usuario = User(
+        rut=user.rut,
+        nombre=user.nombre,
+        apellido=user.apellido,
         email=user.email,
         password=hashed_password,
-        role="user"  # 👈 Rol por defecto
+        role=user.role
     )
     db.add(nuevo_usuario)
     db.commit()
     db.refresh(nuevo_usuario)
     return {"mensaje": "✅ Usuario registrado exitosamente"}
 
+# 🔄 Endpoint de prueba para admin
 @router.get("/solo_admins")
 def solo_para_admins(user: User = Depends(verificar_admin)):
     return {"mensaje": f"Hola {user.email}, eres administrador ✅"}
+
+# 📋 Obtener todos los usuarios
+@router.get("/usuarios", response_model=list[UserOut])
+def obtener_usuarios(db: Session = Depends(get_db), user: User = Depends(verificar_admin)):
+    return db.query(User).all()
+
+# 🔄 Cambiar contraseña por RUT
+@router.put("/usuarios/{rut}/cambiar_password")
+def cambiar_password(rut: str, nueva_password: str, db: Session = Depends(get_db), user: User = Depends(verificar_admin)):
+    usuario = get_user_by_rut(db, rut)
+    if not usuario:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    usuario.password = get_password_hash(nueva_password)
+    db.commit()
+    return {"mensaje": "✅ Contraseña actualizada correctamente."}

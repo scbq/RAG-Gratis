@@ -1,14 +1,19 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, constr
 
 class UserCreate(BaseModel):
+    rut: constr(strip_whitespace=True, min_length=8, max_length=12)
+    nombre: str
+    apellido: str
     email: EmailStr
     password: str
-    role: str
+    role: str  # "admin" o "user"
 
 class UserOut(BaseModel):
-    id: int
+    rut: str
+    nombre: str
+    apellido: str
     email: EmailStr
-    is_admin: bool
+    role: str
 
     class Config:
         orm_mode = True
