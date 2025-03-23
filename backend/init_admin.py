@@ -10,7 +10,7 @@ admin_existente = db.query(User).filter(User.email == "admin@example.com").first
 
 if not admin_existente:
     admin = User(
-        rut="12345678-9",
+        rut="15771527-5",
         nombre="Admin",
         apellido="Principal",
         email="admin@example.com",
