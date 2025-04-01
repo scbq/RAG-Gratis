@@ -8,7 +8,7 @@ const AdminDashboard = () => {
   const [answer, setAnswer] = useState("");
   const [pdfs, setPdfs] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
-  const { logout } = useAuth();
+  const { logout, token } = useAuth(); // 👈 Traemos el token
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -27,6 +27,9 @@ const AdminDashboard = () => {
       const response = await fetch("http://127.0.0.1:8000/cargar_documento", {
         method: "POST",
         body: formData,
+        headers: {
+          Authorization: `Bearer ${token}`, // 👈 autenticación requerida
+        },
       });
 
       if (!response.ok) {
@@ -35,7 +38,7 @@ const AdminDashboard = () => {
 
       const data = await response.json();
       alert(data.mensaje);
-      setPdfs((prev) => [...prev, file]); // Agrega el archivo a la lista local
+      setPdfs((prev) => [...prev, file]);
     } catch (error) {
       console.error("Error al subir el documento:", error);
       alert("Hubo un error al subir el documento.");
@@ -53,6 +56,7 @@ const AdminDashboard = () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`, // 👈 aquí también el token
         },
         body: JSON.stringify({ pregunta: question }),
       });
@@ -79,7 +83,10 @@ const AdminDashboard = () => {
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-gray-800">RAG Admin Dashboard</h1>
           <div className="flex items-center gap-4">
-            <button onClick={() => navigate("/admin")} className="text-blue-600 hover:text-blue-800 flex items-center">
+            <button
+              onClick={() => navigate("/admin")}
+              className="text-blue-600 hover:text-blue-800 flex items-center"
+            >
               <ArrowLeftCircle className="mr-1" />
               Volver
             </button>
@@ -91,6 +98,7 @@ const AdminDashboard = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Subir PDF */}
           <div className="lg:col-span-1 bg-white rounded-lg shadow-md p-6">
             <h2 className="text-xl font-semibold mb-4">📂 Subir documentos PDF</h2>
             <label className="block mb-4">
@@ -113,12 +121,15 @@ const AdminDashboard = () => {
               <h3 className="text-sm font-medium text-gray-700 mb-2">📑 Archivos Subidos:</h3>
               <ul className="space-y-2">
                 {pdfs.map((pdf, index) => (
-                  <li key={index} className="text-sm text-gray-600">{pdf.name}</li>
+                  <li key={index} className="text-sm text-gray-600">
+                    {pdf.name}
+                  </li>
                 ))}
               </ul>
             </div>
           </div>
 
+          {/* Chat */}
           <div className="lg:col-span-2 bg-white rounded-lg shadow-md p-6">
             <h2 className="text-xl font-semibold mb-4">💬 Pregunta sobre los documentos</h2>
             <div className="h-[500px] flex flex-col">
@@ -144,6 +155,7 @@ const AdminDashboard = () => {
                   onChange={(e) => setQuestion(e.target.value)}
                   placeholder="Haz una pregunta sobre tus PDFs..."
                   className="flex-1 px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                  required
                 />
                 <button
                   type="submit"

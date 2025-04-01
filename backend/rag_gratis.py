@@ -1,6 +1,11 @@
-from fastapi import APIRouter, HTTPException, UploadFile, File
+from fastapi import APIRouter, HTTPException, Depends, UploadFile, File
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel
+from sqlalchemy.orm import Session
+from database import get_db
+from models.history import History
+from models.user import User
+from routers.auth import get_current_user
+from schemas.pregunta import PreguntaRequest, RespuestaResponse
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.vectorstores import FAISS
 from langchain_community.document_loaders import PyPDFLoader
@@ -13,12 +18,6 @@ import os
 import pickle
 
 router = APIRouter()
-
-class PreguntaRequest(BaseModel):
-    pregunta: str
-
-class RespuestaResponse(BaseModel):
-    respuesta: str
 
 DATA_PATH = "./data"
 VECTORSTORE_PATH = "faiss_index.pkl"
@@ -68,9 +67,23 @@ def respuesta(pregunta: str):
     return results.get("answer", "No tengo suficiente información para responder con certeza.")
 
 @router.post("/preguntar", response_model=RespuestaResponse)
-def preguntar(pregunta_request: PreguntaRequest):
+def preguntar(
+    pregunta_request: PreguntaRequest,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user)
+):
     try:
         respuesta_obtenida = respuesta(pregunta_request.pregunta)
+
+        # Guardar en historial
+        historial = History(
+            pregunta=pregunta_request.pregunta,
+            respuesta=respuesta_obtenida,
+            user_rut=user.rut
+        )
+        db.add(historial)
+        db.commit()
+
         return {"respuesta": respuesta_obtenida}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -96,7 +109,6 @@ async def cargar_documento_api(file: UploadFile = File(...)):
 
         guardar_vectorstore()
         return {"mensaje": f"✅ Documento '{file.filename}' cargado e indexado correctamente."}
-
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
