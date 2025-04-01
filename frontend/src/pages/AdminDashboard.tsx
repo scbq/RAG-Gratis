@@ -1,6 +1,8 @@
 import { useNavigate } from "react-router-dom";
 import { FileText, UserPlus, Trash2, LogOut } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+import { ROUTES } from "../routes";
+
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -8,8 +10,9 @@ const AdminDashboard = () => {
 
   const handleLogout = () => {
     logout();
-    navigate("/login");
+    navigate("/");
   };
+  navigate(ROUTES.LOGIN);
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center px-4">

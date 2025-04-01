@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useAuth } from "../context/AuthContext";
-import { LogOut, Send, Upload } from "lucide-react";
+import { LogOut, Send, Upload, ArrowLeftCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const AdminDashboard = () => {
@@ -13,7 +13,7 @@ const AdminDashboard = () => {
 
   const handleLogout = () => {
     logout();
-    navigate("/login");
+    navigate("/");
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -78,13 +78,16 @@ const AdminDashboard = () => {
       <div className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-gray-800">RAG Admin Dashboard</h1>
-          <button
-            onClick={handleLogout}
-            className="flex items-center px-4 py-2 text-sm text-red-600 hover:text-red-800"
-          >
-            <LogOut className="h-5 w-5 mr-2" />
-            Logout
-          </button>
+          <div className="flex items-center gap-4">
+            <button onClick={() => navigate("/admin")} className="text-blue-600 hover:text-blue-800 flex items-center">
+              <ArrowLeftCircle className="mr-1" />
+              Volver
+            </button>
+            <button onClick={handleLogout} className="text-red-600 hover:underline">
+              <LogOut className="inline w-4 h-4 mr-1" />
+              Cerrar sesión
+            </button>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

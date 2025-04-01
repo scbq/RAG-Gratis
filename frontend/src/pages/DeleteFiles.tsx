@@ -52,7 +52,7 @@ const DeleteFiles = () => {
             <button
               onClick={() => {
                 logout();
-                navigate("/login");
+                navigate("/");
               }}
               className="text-sm text-red-600 hover:underline"
             >

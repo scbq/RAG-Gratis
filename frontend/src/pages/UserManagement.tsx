@@ -145,7 +145,7 @@ const UserManagement = () => {
               <ArrowLeftCircle className="mr-1" />
               Volver
             </button>
-            <button onClick={() => { logout(); navigate("/login"); }} className="text-red-600 hover:underline">
+            <button onClick={() => { logout(); navigate("/"); }} className="text-red-600 hover:underline">
               <LogOut className="inline w-4 h-4 mr-1" />
               Cerrar sesión
             </button>

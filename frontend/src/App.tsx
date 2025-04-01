@@ -1,44 +1,85 @@
-// src/App.tsx
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import React from "react";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import Login from "./pages/Login";
+import UserManagement from "./pages/UserManagement";
 import AdminDashboard from "./pages/AdminDashboard";
 import UserDashboard from "./pages/UserDashboard";
-import { AuthProvider } from "./context/AuthContext";
-import UserManagement from "./pages/UserManagement";
-import DeleteFiles from "./pages/DeleteFiles";
 import Chat from "./pages/Chat";
+import DeleteFiles from "./pages/DeleteFiles";
+import { AuthProvider, useAuth } from "./context/AuthContext";
+
+const PrivateRoute = ({ children, allowedRole }: { children: JSX.Element; allowedRole: string }) => {
+  const { isAuthenticated, role } = useAuth();
+
+  if (!isAuthenticated) {
+    return <Navigate to="/" />;
+  }
+
+  if (role !== allowedRole) {
+    return <Navigate to="/" />;
+  }
+
+  return children;
+};
 
 function App() {
   return (
-    <AuthProvider> {/* 👈 Envolver toda la app */}
-      <BrowserRouter>
+    <AuthProvider>
+      <Router>
         <Routes>
-          {/* Ruta por defecto */}
-          <Route path="/" element={<Navigate to="/login" />} />
+          <Route path="/" element={<Login />} />
 
-          {/* Login */}
-          <Route path="/login" element={<Login />} />
+          {/* Rutas para ADMIN */}
+          <Route
+            path="/admin"
+            element={
+              <PrivateRoute allowedRole="admin">
+                <AdminDashboard />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/admin/gestion-usuarios"
+            element={
+              <PrivateRoute allowedRole="admin">
+                <UserManagement />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/admin/chat"
+            element={
+              <PrivateRoute allowedRole="admin">
+                <Chat />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/admin/eliminar-archivos"
+            element={
+              <PrivateRoute allowedRole="admin">
+                <DeleteFiles />
+              </PrivateRoute>
+            }
+          />
 
-          {/* Vistas según rol */}
-          <Route path="/admin" element={<AdminDashboard />} />
-          <Route path="/usuario" element={<UserDashboard />} />
+          {/* Rutas para USUARIO */}
+          <Route
+            path="/user"
+            element={
+              <PrivateRoute allowedRole="user">
+                <UserDashboard />
+              </PrivateRoute>
+            }
+          />
 
-          {/* Vista para agregar usuarios */}
-          <Route path="/admin/gestion-usuarios" element={<UserManagement />} />
-
-|         {/* Vista para eliminar archivos */}
-          <Route path="/admin/eliminar-archivos" element={<DeleteFiles />} />
-
-          {/* Vista Chat */}
-          <Route path="/admin/chat" element={<Chat />} />
-
-          {/* Ruta para no encontradas */}
+          {/* Página no encontrada */}
           <Route
             path="*"
-            element={<div className="p-4 text-red-500">Página no encontrada</div>}
+            element={<div className="text-center text-2xl mt-10">🚫 Página no encontrada</div>}
           />
         </Routes>
-      </BrowserRouter>
+      </Router>
     </AuthProvider>
   );
 }
