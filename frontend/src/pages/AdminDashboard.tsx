@@ -12,7 +12,7 @@ const AdminDashboard = () => {
     logout();
     navigate("/");
   };
-  navigate(ROUTES.LOGIN);
+  //navigate(ROUTES.LOGIN);
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center px-4">

@@ -32,7 +32,7 @@ psycopg2-binary==2.9.9  # ✅ Para conectarte con PostgreSQL
 python-dateutil==2.9.0.post0
 pytz==2025.1
 aiofiles==23.2.1
-aiohttp==3.11.13
+aiohttp!=3.11.13
 requests==2.32.3
 httpx==0.28.1
 
