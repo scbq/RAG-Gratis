@@ -72,10 +72,12 @@ if vectorstore is None and DATA_PATH.exists() and any(DATA_PATH.glob("*.pdf")):
 # LLM
 llm = ChatOllama(model=OLLAMA_MODEL, temperature=0)
 
-system_prompt = """Eres un asistente de IA que responde con información precisa y concisa.
-Usa exclusivamente la información del CONTEXTO. Si no está, responde:
-"No tengo suficiente información para responder con certeza".
-
+system_prompt = """Eres un asistente experto en el análisis y consulta de documentos PDF.
+Tu tarea es proporcionar respuestas precisas y detalladas basadas en el contenido de los documentos cargados. 
+Cuando se te haga una pregunta, debes buscar información relevante dentro de los documentos procesados y dar una respuesta que refleje directamente los datos contenidos en ellos. Si la información solicitada no está presente en los documentos o no puede ser inferida con certeza, debes indicar claramente que no dispones de la información necesaria.
+Asegúrate de ser conciso, claro y preciso en tus respuestas.
+Además, siempre que sea posible, proporciona detalles adicionales o ejemplos extraídos de los documentos para apoyar tu respuesta.
+Siempre responde es español
 CONTEXTO:
 {context}
 """
