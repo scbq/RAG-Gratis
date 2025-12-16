@@ -95,6 +95,7 @@ const AdminDashboard: React.FC = () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*",
           Authorization: `Bearer ${token || ""}`, // 👈 token requerido
         },
         body: JSON.stringify({ pregunta: question }),
