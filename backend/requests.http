@@ -1,0 +1,9 @@
+###
+POST http://127.0.0.1:8000/preguntar
+content-type: application/json
+Authorization: Bearer 
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbkBleGFtcGxlLmNvbSIsInJvbGUiOiJhZG1pbiIsImV4cCI6MTc2NTg0Mzg5MX0.KKPMrz763rVA16IaC4k_nrPEEMs2B6xct-cMd6PLAx4
+
+{
+    "pregunta": "que es big data?"
+}
