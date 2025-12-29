@@ -6,7 +6,7 @@ from jose import JWTError, jwt
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from database import get_db
 from models.user import User
-from schemas.user import UserCreate, UserUpdate, UserOut, Token  # 👈 Aquí está el fix
+from schemas.user import UserCreate, UserResetPassword, UserUpdate, UserOut, Token  # 👈 Aquí está el fix
 from config import settings
 
 SECRET_KEY = settings.SECRET_KEY
@@ -162,11 +162,26 @@ def eliminar_usuario(rut: str, db: Session = Depends(get_db), user: User = Depen
 
 
 # 🔄 Resetear contraseña por email
-@router.put("/usuarios/reset_password")
-def reset_password(email: str, nueva_password: str, db: Session = Depends(get_db), user: User = Depends(verificar_admin)):
-    usuario = db.query(User).filter(User.email == email).first()
-    if not usuario:
-        raise HTTPException(status_code=404, detail="Usuario no encontrado")
-    usuario.password = get_password_hash(nueva_password)
-    db.commit()
-    return {"mensaje": f"🔑 Contraseña de {email} actualizada correctamente"}
+@router.put("/usuarios/reset_password/{rut}")
+def reset_password(
+    rut: str, 
+    datos: UserResetPassword,
+    db: Session = Depends(get_db),
+    user: User = Depends(verificar_admin) 
+):
+    print('LLEGA BIEN')
+    try:
+        usuario = db.query(User).filter(User.rut == rut).first()
+        if not usuario:
+            raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    except Exception as e:
+        raise f'Error obtener usuario: {e}'
+
+    try:
+        usuario.password = get_password_hash(datos.nueva_password)
+        db.commit()
+    except Exception as ex:
+        raise f'Error generar hash: {e}'
+
+    
+    return {"mensaje": f"🔑 Contraseña de {rut} actualizada correctamente"}

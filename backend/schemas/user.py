@@ -31,6 +31,11 @@ class UserOut(BaseModel):
         orm_mode = True
 
 
+class UserResetPassword(BaseModel):
+    nueva_password: str
+
+
+
 # 👉 Esquema para el token de autenticación
 class Token(BaseModel):
     access_token: str
