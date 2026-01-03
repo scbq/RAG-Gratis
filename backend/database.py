@@ -13,11 +13,9 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()
 
-# Importar modelos después de definir Base
 from models.user import User
 from models.history import History
 
-# Crear las tablas automáticamente
 Base.metadata.create_all(bind=engine)
 
 def get_db():

@@ -17,31 +17,21 @@ router = APIRouter()
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/login")
 
-
-# 🔐 Hashear contraseña
 def get_password_hash(password: str):
     return pwd_context.hash(password)
 
-
-# 🔍 Verificar contraseña
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
 
-
-# 🔎 Obtener usuario por email
 def get_user_by_email(db: Session, email: str):
     return db.query(User).filter(User.email == email).first()
 
-
-# ✅ Crear token JWT
 def create_access_token(data: dict, expires_delta: timedelta | None = None):
     to_encode = data.copy()
     expire = datetime.utcnow() + (expires_delta or timedelta(minutes=15))
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
-
-# 🧪 Obtener usuario actual
 def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> User:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -61,8 +51,6 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
         raise credentials_exception
     return user
 
-
-# ✅ Verificar si es admin
 def verificar_admin(user: User = Depends(get_current_user)):
     if user.role != "admin":
         raise HTTPException(
@@ -71,8 +59,6 @@ def verificar_admin(user: User = Depends(get_current_user)):
         )
     return user
 
-
-# 📝 Registro de administrador
 @router.post("/registro_admin")
 def registrar_admin(user: UserCreate, db: Session = Depends(get_db)):
     hashed_password = get_password_hash(user.password)
@@ -89,8 +75,6 @@ def registrar_admin(user: UserCreate, db: Session = Depends(get_db)):
     db.refresh(nuevo_usuario)
     return {"mensaje": "✅ Administrador creado exitosamente"}
 
-
-# 🔐 Login
 @router.post("/login", response_model=Token)
 def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     user = get_user_by_email(db, form_data.username)
@@ -100,8 +84,6 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
     access_token = create_access_token(data={"sub": user.email, "role": user.role})
     return {"access_token": access_token, "token_type": "bearer"}
 
-
-# 📥 Registrar usuario (con rol)
 @router.post("/registro_usuario")
 def registrar_usuario(user: UserCreate, db: Session = Depends(get_db)):
     existente = get_user_by_email(db, user.email)
@@ -122,14 +104,10 @@ def registrar_usuario(user: UserCreate, db: Session = Depends(get_db)):
     db.refresh(nuevo_usuario)
     return {"mensaje": "✅ Usuario registrado exitosamente"}
 
-
-# 🔄 Obtener usuarios (solo admins)
 @router.get("/usuarios", response_model=list[UserOut])
 def obtener_usuarios(db: Session = Depends(get_db), user: User = Depends(verificar_admin)):
     return db.query(User).all()
 
-
-# 🔄 Actualizar usuario por RUT
 @router.put("/usuarios/{rut}")
 def actualizar_usuario(
     rut: str,
@@ -149,8 +127,6 @@ def actualizar_usuario(
     db.commit()
     return {"mensaje": f"✅ Usuario {rut} actualizado correctamente"}
 
-
-# 🗑️ Eliminar usuario
 @router.delete("/usuarios/{rut}")
 def eliminar_usuario(rut: str, db: Session = Depends(get_db), user: User = Depends(verificar_admin)):
     usuario = db.query(User).filter(User.rut == rut).first()
@@ -160,8 +136,6 @@ def eliminar_usuario(rut: str, db: Session = Depends(get_db), user: User = Depen
     db.commit()
     return {"mensaje": f"🗑️ Usuario {rut} eliminado correctamente"}
 
-
-# 🔄 Resetear contraseña por email
 @router.put("/usuarios/reset_password/{rut}")
 def reset_password(
     rut: str, 
